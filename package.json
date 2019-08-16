@@ -43,7 +43,7 @@
     "url": "https://github.com/PanJiaChen/vue-element-admin/issues"
   },
   "dependencies": {
-    "axios": "0.18.0",
+    "axios": "0.18.1",
     "element-ui": "2.7.0",
     "fuse.js": "^3.4.5",
     "normalize.css": "7.0.0",
@@ -59,7 +59,7 @@
     "@babel/core": "7.0.0",
     "@babel/register": "7.0.0",
     "@vue/cli-plugin-babel": "3.5.3",
-    "@vue/cli-plugin-eslint": "3.5.1",
+    "@vue/cli-plugin-eslint": "^3.9.1",
     "@vue/cli-plugin-unit-jest": "3.5.3",
     "@vue/cli-service": "3.5.3",
     "@vue/test-utils": "1.0.0-beta.29",
