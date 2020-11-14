@@ -62,8 +62,8 @@ export default {
     personalInfo: '账户信息',
     changePassword: '修改密码',
     manager: '管理员',
-    managerment: '管理',
-    'user-managerment': '用户管理'
+    management: '管理',
+    'user-management': '用户管理'
   },
   navbar: {
     dashboard: '首页',

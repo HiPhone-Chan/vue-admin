@@ -9,6 +9,7 @@ import Layout from '@/layout'
 /* Router Modules */
 import accountRouter from './modules/account'
 import managementRouter from './modules/management'
+import docRouter from './modules/doc'
 
 /**
  * Note: sub-menu only appear when route children.length >= 1
@@ -106,6 +107,7 @@ export const asyncRoutes = [
   /** when your routing map is too long, you can split it into small modules **/
   accountRouter,
   managementRouter,
+  docRouter,
 
   {
     path: '/error',
