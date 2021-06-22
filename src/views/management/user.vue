@@ -103,7 +103,7 @@
 
 <script>
 import Pagination from '@/components/Pagination'
-import user from '../../api/user'
+import { checkUserLogin, createUser, updateUser, getUsers, deleteUser, changePassword } from '@/api/user'
 import { roleOptions } from './options'
 
 const VALID_CHARACTER = {
@@ -131,7 +131,7 @@ export default {
       if (this.dialogStatus === 'create') {
         if (value) {
           if (VALID_CHARACTER.pattern.test(value)) {
-            const resp = await user.checkUserLogin(value)
+            const resp = await checkUserLogin(value)
             const data = resp.data
             if (data) {
               callback(new Error('Login exists'))
@@ -178,13 +178,30 @@ export default {
       }
     }
   },
+  watch: {
+    listQuery: {
+      deep: true,
+      handler: function(val, oldVal) {
+        this.$router.push({
+          query: this.listQuery
+        })
+      }
+    }
+  },
+  created() {
+    const query = this.$route.query
+    if (query) {
+      this.listQuery.page = query.page ? Number(query.page) : this.listQuery.page
+      this.listQuery.size = query.size ? Number(query.size) : this.listQuery.size
+    }
+  },
   mounted() {
     this.getData()
   },
   methods: {
     async getData() {
       this.listLoading = true
-      const resp = await user.getUsers(this.listQuery)
+      const resp = await getUsers(this.listQuery)
       const data = resp.data
       this.list = data.content
       this.total = data.totalElements
@@ -241,7 +258,7 @@ export default {
           type: 'warning'
         })
 
-        await user.deleteUser(this.temp.login)
+        await deleteUser(this.temp.login)
         this.getData()
       } catch (err) {
         console.log(err)
@@ -250,7 +267,7 @@ export default {
     createData() {
       this.$refs['dataForm'].validate(async valid => {
         if (valid) {
-          await user.createUser(this.temp)
+          await createUser(this.temp)
           this.getData()
           this.dialogVisible = false
         }
@@ -259,7 +276,7 @@ export default {
     updateData() {
       this.$refs['dataForm'].validate(async valid => {
         if (valid) {
-          await user.updateUser(this.temp)
+          await updateUser(this.temp)
           this.getData()
           this.dialogVisible = false
         }
@@ -274,7 +291,7 @@ export default {
           }
 
           try {
-            await user.changePassword(this.temp.login, changePwdVM)
+            await changePassword(this.temp.login, changePwdVM)
             this.$notify({
               title: '修改成功',
               type: 'success'
