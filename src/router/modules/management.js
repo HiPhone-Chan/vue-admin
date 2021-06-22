@@ -5,7 +5,7 @@ const managementRouter = {
   component: Layout,
   redirect: 'noredirect',
   meta: {
-    title: 'managerment',
+    title: 'management',
     icon: 'user'
   },
   children: [
@@ -14,7 +14,7 @@ const managementRouter = {
       component: () => import('@/views/management/user'),
       name: 'user',
       meta: {
-        title: 'user-managerment',
+        title: 'user-management',
         icon: 'people',
         noCache: true,
         roles: ['ROLE_ADMIN']
