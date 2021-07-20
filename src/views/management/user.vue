@@ -202,9 +202,8 @@ export default {
     async getData() {
       this.listLoading = true
       const resp = await getUsers(this.listQuery)
-      const data = resp.data
-      this.list = data.content
-      this.total = data.totalElements
+      this.list = resp.data
+      this.total = Number(resp.headers['x-total-count'])
       this.listLoading = false
     },
     handleFilter() {

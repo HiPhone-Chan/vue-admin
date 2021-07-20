@@ -8,8 +8,5 @@ export const roleOptions = [
   }, {
     value: 'ROLE_USER',
     label: '普通用户'
-  }, {
-    value: 'ROLE_ANONYMOUS',
-    label: '匿名用户'
   }
 ]
