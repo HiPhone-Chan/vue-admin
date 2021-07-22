@@ -3,7 +3,7 @@ import Layout from '@/layout'
 export default {
   path: '/doc',
   component: Layout,
-  redirect: 'noredirect',
+  // redirect: 'noredirect',
   meta: {
     title: 'doc',
     icon: 'documentation'

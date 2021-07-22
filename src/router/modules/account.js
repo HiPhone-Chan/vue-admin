@@ -3,7 +3,7 @@ import Layout from '@/layout'
 const accountRouter = {
   path: '/account',
   component: Layout,
-  redirect: 'noredirect',
+  // redirect: 'noredirect',
   meta: {
     title: 'account',
     icon: 'user'
