@@ -3,7 +3,7 @@ import Layout from '@/layout'
 const managementRouter = {
   path: '/management',
   component: Layout,
-  redirect: 'noredirect',
+  // redirect: 'noredirect',
   meta: {
     title: 'management',
     icon: 'user'
