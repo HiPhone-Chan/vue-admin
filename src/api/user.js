@@ -1,4 +1,4 @@
-import request from '../utils/request'
+import request from '@/utils/request'
 
 export function createUser(userVM) {
   return request.post('/api/admin/user', userVM)

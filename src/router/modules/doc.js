@@ -16,7 +16,8 @@ export default {
       meta: {
         title: 'api',
         icon: 'documentation',
-        noCache: true
+        noCache: true,
+        roles: ['ROLE_ADMIN']
       }
     }
   ]

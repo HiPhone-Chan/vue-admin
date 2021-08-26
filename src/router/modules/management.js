@@ -6,7 +6,8 @@ const managementRouter = {
   // redirect: 'noredirect',
   meta: {
     title: 'management',
-    icon: 'user'
+    icon: 'user',
+    roles: ['ROLE_ADMIN']
   },
   children: [
     {
@@ -16,8 +17,17 @@ const managementRouter = {
       meta: {
         title: 'user-management',
         icon: 'people',
-        noCache: true,
-        roles: ['ROLE_ADMIN']
+        noCache: true
+      }
+    },
+    {
+      path: 'operation-log',
+      component: () => import('@/views/management/log'),
+      name: 'operation-log',
+      meta: {
+        title: 'operation-log',
+        icon: 'documentation',
+        noCache: true
       }
     }
   ]
