@@ -7,7 +7,6 @@ Vue.use(Router)
 import Layout from '@/layout'
 
 /* Router Modules */
-import accountRouter from './modules/account'
 import managementRouter from './modules/management'
 import docRouter from './modules/doc'
 
@@ -92,7 +91,7 @@ export const constantRoutes = [
         path: 'index',
         component: () => import('@/views/profile/index'),
         name: 'Profile',
-        meta: { title: 'Profile', icon: 'user', noCache: true }
+        meta: { title: '个人中心', icon: 'user', noCache: true }
       }
     ]
   }
@@ -105,7 +104,6 @@ export const constantRoutes = [
 export const asyncRoutes = [
 
   /** when your routing map is too long, you can split it into small modules **/
-  accountRouter,
   managementRouter,
   docRouter,
 

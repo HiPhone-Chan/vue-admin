@@ -78,6 +78,7 @@ export default {
     title: '系统登录',
     logIn: '登录',
     username: '账号',
+    nickname: '昵称',
     password: '密码',
     mobile: '移动电话',
     any: '随便填',

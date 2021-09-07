@@ -12,8 +12,8 @@
       </el-form-item>
 
       <el-form-item>
-        <el-button type="primary" @click="submit('form')">提交</el-button>
-        <el-button @click="reset('form')">重置</el-button>
+        <el-button type="primary" @click="submit('form')">保存</el-button>
+        <el-button @click="reset('form')">清空</el-button>
       </el-form-item>
     </el-form>
 
@@ -22,11 +22,7 @@
 
 <script>
 import { changePassword } from '@/api/account'
-
-const VALID_CHARACTER = {
-  pattern: /^[a-zA-Z0-9_'.@]{4,50}$/,
-  message: `英文大小写,数字,以及 _'.@,长度4-50`
-}
+import { LOGIN_VALID_CHARACTER } from '@/utils/app-common'
 
 export default {
   data() {
@@ -38,7 +34,7 @@ export default {
       },
       rules: {
         oldPwd: [{ required: true, message: '请输入旧密码' }],
-        newPwd: [VALID_CHARACTER, { required: true, message: '请输入新密码' }],
+        newPwd: [LOGIN_VALID_CHARACTER, { required: true, message: '请输入新密码' }],
         confirmPwd: [
           {
             validator: (rule, value, callback) => {

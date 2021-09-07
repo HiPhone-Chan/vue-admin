@@ -40,7 +40,7 @@
       </el-table-column>
       <el-table-column width="150px" align="center" :label="$t('permission.role')">
         <template slot-scope="scope">
-          <span>{{ scope.row.authorities|formatAuthorities }}</span>
+          <span>{{ scope.row.authorities | formatAuthorities }}</span>
         </template>
       </el-table-column>
       <el-table-column align="center" :label="$t('table.actions')" class-name="small-padding fixed-width">
@@ -104,40 +104,25 @@
 <script>
 import Pagination from '@/components/Pagination'
 import { checkUserLogin, createUser, updateUser, getUsers, deleteUser, changePassword } from '@/api/user'
-import { roleOptions } from './options'
+import { roleOptions, formatAuthorities, LOGIN_VALID_CHARACTER } from '@/utils/app-common'
 
-const VALID_CHARACTER = {
-  pattern: /^[a-zA-Z0-9_'.@]{4,50}$/,
-  message: `英文大小写,数字,以及 _'.@,长度4-50`
-}
 export default {
   components: { Pagination },
   filters: {
-    formatAuthorities(val) {
-      return val
-        .map(item => {
-          for (const option of roleOptions) {
-            if (option.value === item) {
-              return option.label
-            }
-          }
-          return item
-        })
-        .join(',')
-    }
+    formatAuthorities
   },
   data() {
     const validateLogin = async(rule, value, callback) => {
       if (this.dialogStatus === 'create') {
         if (value) {
-          if (VALID_CHARACTER.pattern.test(value)) {
+          if (LOGIN_VALID_CHARACTER.pattern.test(value)) {
             const resp = await checkUserLogin(value)
             const data = resp.data
             if (data) {
               callback(new Error('Login exists'))
             }
           } else {
-            callback(new Error(VALID_CHARACTER.message))
+            callback(new Error(LOGIN_VALID_CHARACTER.message))
           }
         } else {
           callback(new Error('Please enter login'))
@@ -173,7 +158,7 @@ export default {
         mobile: [{ pattern: /^[0-9]{7,16}$/, message: '请输入正确的电话号码' }],
         newPassword: [
           { required: true, message: 'password is required' },
-          VALID_CHARACTER
+          LOGIN_VALID_CHARACTER
         ]
       }
     }
