@@ -5,6 +5,8 @@ import router, { resetRouter } from '@/router'
 const state = {
   token: getToken(),
   name: '',
+  nickname: '',
+  mobile: '',
   avatar: '',
   introduction: '',
   roles: []
@@ -20,6 +22,12 @@ const mutations = {
   },
   SET_NAME: (state, name) => {
     state.name = name
+  },
+  SET_NICKNAME: (state, nickname) => {
+    state.nickname = nickname
+  },
+  SET_MOBILE: (state, mobile) => {
+    state.mobile = mobile
   },
   SET_AVATAR: (state, avatar) => {
     state.avatar = avatar
@@ -55,8 +63,9 @@ const actions = {
         }
 
         data.roles = data.authorities
-        const { roles, login, avatar, introduction } = data
+        const { roles, login, nickName, imageUrl, mobile, introduction } = data
         const name = login
+        const avatar = imageUrl
 
         // roles must be a non-empty array
         if (!roles || roles.length <= 0) {
@@ -65,6 +74,8 @@ const actions = {
 
         commit('SET_ROLES', roles)
         commit('SET_NAME', name)
+        commit('SET_NICKNAME', nickName)
+        commit('SET_MOBILE', mobile)
         commit('SET_AVATAR', avatar)
         if (!avatar) {
           commit('SET_AVATAR', 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif')

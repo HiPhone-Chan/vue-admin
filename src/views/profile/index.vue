@@ -10,8 +10,11 @@
         <el-col :span="18" :xs="24">
           <el-card>
             <el-tabs v-model="activeTab">
-              <el-tab-pane label="Account" name="account">
-                <account :user="user" />
+              <el-tab-pane label="用户信息" name="account">
+                <account :user="user" @on-change="updateAccount" />
+              </el-tab-pane>
+              <el-tab-pane label="修改密码" name="password">
+                <change-password />
               </el-tab-pane>
             </el-tabs>
           </el-card>
@@ -26,10 +29,12 @@
 import { mapGetters } from 'vuex'
 import UserCard from './components/UserCard'
 import Account from './components/Account'
+import ChangePassword from './components/ChangePassword'
+import { updateAccount } from '@/api/account'
 
 export default {
   name: 'Profile',
-  components: { UserCard, Account },
+  components: { UserCard, Account, ChangePassword },
   data() {
     return {
       user: {},
@@ -39,6 +44,8 @@ export default {
   computed: {
     ...mapGetters([
       'name',
+      'nickname',
+      'mobile',
       'avatar',
       'roles'
     ])
@@ -50,10 +57,25 @@ export default {
     getUser() {
       this.user = {
         name: this.name,
-        role: this.roles.join(' | '),
-        email: 'admin@test.com',
+        nickname: this.nickname,
+        roles: this.roles,
+        mobile: this.mobile,
         avatar: this.avatar
       }
+    },
+    async updateAccount(data) {
+      await updateAccount({
+        nickName: this.user.nickname,
+        mobile: this.user.mobile,
+        imageUrl: this.user.avatar
+      })
+      this.$store.dispatch('user/getInfo')
+
+      this.$message({
+        message: '更新成功',
+        type: 'success',
+        duration: 5 * 1000
+      })
     }
   }
 }

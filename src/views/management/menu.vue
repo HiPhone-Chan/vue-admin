@@ -1,15 +1,13 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-select v-model="listQuery.authority" class="filter-item" :placeholder="$t('permission.role')" clearable @change="handleFilter">
-        <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value" />
-      </el-select>
       <el-input v-model="listQuery.title" :placeholder="$t('table.search')" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
       <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
       <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">{{ $t('table.add') }}</el-button>
     </div>
 
     <el-table
+      ref="table"
       v-loading="listLoading"
       :data="list"
       element-loading-text="给我一点时间"
@@ -17,37 +15,32 @@
       fit
       highlight-current-row
       style="width: 100%"
+      row-key="id"
+      lazy
+      :load="loadChildren"
+      :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
     >
-      <el-table-column align="center" :label="$t('table.id')" width="65">
+      <el-table-column min-width="110px" align="left" label="名称">
         <template slot-scope="scope">
-          <span>{{ scope.row.id }}</span>
+          <span>{{ scope.row.title }}</span>
         </template>
       </el-table-column>
-      <el-table-column width="110px" align="center" :label="$t('login.username')">
+      <el-table-column width="110px" align="center" label="图标">
         <template slot-scope="scope">
-          <span>{{ scope.row.login }}</span>
+          <i :class="scope.row.icon" />
         </template>
       </el-table-column>
-      <el-table-column width="110px" align="center" :label="$t('user.nickname')">
+      <el-table-column width="310px" align="center" label="地址">
         <template slot-scope="scope">
-          <span>{{ scope.row.nickName }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column width="110px" align="center" :label="$t('login.mobile')">
-        <template slot-scope="scope">
-          <span>{{ scope.row.mobile }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column width="150px" align="center" :label="$t('permission.role')">
-        <template slot-scope="scope">
-          <span>{{ scope.row.authorities | formatAuthorities }}</span>
+          <span>{{ scope.row.path }}</span>
         </template>
       </el-table-column>
       <el-table-column align="center" :label="$t('table.actions')" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">{{ $t('table.edit') }}</el-button>
-          <el-button type="warning" size="mini" @click="handlePassword(scope.row)">{{ $t('login.password') }}</el-button>
-          <el-button type="danger" size="mini" @click="handleDelete(scope.row,'deleted')">{{ $t('table.delete') }}</el-button>
+          <el-button type="warning" size="mini" @click="handleChildren(scope.row)">新增下级</el-button>
+          <el-button v-if="!scope.row.hasChildren" type="danger" size="mini" @click="handleDelete(scope.row,'deleted')">{{ $t('table.delete') }}</el-button>
+          <el-button type="primary" size="mini" @click="goNavigationApi(scope.row)">功能</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -55,39 +48,40 @@
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.size" @pagination="getData" />
 
     <el-dialog :visible.sync="dialogVisible">
-      <el-form v-if="dialogStatus!='password'" ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="70px" style="width: 400px; margin-left:50px;">
-        <!-- 编辑 -->
-        <template v-if="dialogStatus=='update'">
-          <el-form-item :label="$t('table.id')">
-            <el-input v-model="temp.id" type="text" placeholder="id" disabled />
-          </el-form-item>
-        </template>
+
+      <el-form v-if="dialogStatus!='children'&&dialogStatus!='api'" ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="70px" style="width: 400px; margin-left:50px;">
 
         <template v-if="dialogStatus=='update'||dialogStatus=='create'">
-          <el-form-item :label="$t('login.username')" prop="login" label-width="90px">
-            <el-input v-model="temp.login" type="text" placeholder="登录名" :disabled="dialogStatus=='update'" />
+          <el-form-item label="名称" prop="title" label-width="90px">
+            <el-input v-model="temp.title" type="text" placeholder="title" />
           </el-form-item>
-          <el-form-item :label="$t('permission.role')" prop="authorities" label-width="90px">
-            <el-select v-model="temp.authorities" :placeholder="$t('permission.role')" clearable multiple>
-              <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value" />
-            </el-select>
+          <el-form-item label="图标" label-width="90px">
+            <el-input v-model="temp.icon" type="text" placeholder="icon">
+              <el-button slot="append" type="primary">
+                <a
+                  href="https://element.eleme.cn/#/zh-CN/component/icon"
+                  target="_blank"
+                >查看可选</a>
+              </el-button>
+            </el-input>
+
           </el-form-item>
-          <el-form-item :label="$t('user.nickname')" label-width="90px">
-            <el-input v-model="temp.nickName" type="text" placeholder="昵称" />
-          </el-form-item>
-          <el-form-item :label="$t('login.mobile')" prop="mobile" label-width="90px">
-            <el-input v-model="temp.mobile" type="text" placeholder="电话号码" />
+          <el-form-item label="地址" label-width="90px" prop="path">
+            <el-input v-model="temp.path" type="text" placeholder="path" />
           </el-form-item>
         </template>
 
       </el-form>
 
       <el-form v-else ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="70px" style="width: 400px; margin-left:50px;">
-        <el-form-item :label="$t('user.adminPassword')" label-width="110px">
-          <el-input v-model="temp.currentPassword" type="password" placeholder="当前管理员密码" />
+        <el-form-item label="名称" label-width="110px" prop="title">
+          <el-input v-model="temp.title" placeholder="名称" />
         </el-form-item>
-        <el-form-item :label="$t('login.password')" prop="newPassword" label-width="110px">
-          <el-input v-model="temp.newPassword" type="password" placeholder="需要改的密码" />
+        <el-form-item label="图标" label-width="110px">
+          <el-input v-model="temp.icon" placeholder="图标" />
+        </el-form-item>
+        <el-form-item label="地址" label-width="110px">
+          <el-input v-model="temp.path" placeholder="地址" />
         </el-form-item>
       </el-form>
 
@@ -95,7 +89,7 @@
         <el-button @click="dialogVisible = false">{{ $t('table.cancel') }}</el-button>
         <el-button v-if="dialogStatus=='create'" type="primary" @click="createData">{{ $t('table.confirm') }}</el-button>
         <el-button v-if="dialogStatus=='update'" type="primary" @click="updateData">{{ $t('table.confirm') }}</el-button>
-        <el-button v-if="dialogStatus=='password'" type="primary" @click="changePwd">{{ $t('table.confirm') }}</el-button>
+        <el-button v-if="dialogStatus=='children'" type="primary" @click="addChildren">{{ $t('table.confirm') }}</el-button>
       </div>
     </el-dialog>
   </div>
@@ -103,14 +97,18 @@
 
 <script>
 import Pagination from '@/components/Pagination'
-import { checkUserLogin, createUser, updateUser, getUsers, deleteUser, changePassword } from '@/api/user'
+import { checkUserLogin } from '@/api/user'
+import { getNavigations, createNavigation, updateNavigation, deleteNavigation } from '@/api/navigation'
+import { getApiInfos } from '@/api/apiInfo'
 import { roleOptions, formatAuthorities, LOGIN_VALID_CHARACTER } from '@/utils/app-common'
+import { tableOpr } from './tree-opr'
 
 export default {
   components: { Pagination },
   filters: {
     formatAuthorities
   },
+  mixins: [tableOpr],
   data() {
     const validateLogin = async(rule, value, callback) => {
       if (this.dialogStatus === 'create') {
@@ -132,6 +130,7 @@ export default {
 
     return {
       list: [],
+      apiList: [],
       total: 0,
       listLoading: false,
       listQuery: {
@@ -149,12 +148,8 @@ export default {
       dialogStatus: '',
       rules: {
         login: [{ required: true, trigger: 'blur', validator: validateLogin }],
-        authorities: [
-          {
-            required: true,
-            message: '请选择权限'
-          }
-        ],
+        title: [{ required: true, message: '名称不能为空', trigger: 'blur' }],
+        path: [{ required: true, message: '路径不能为空', trigger: 'blur' }],
         mobile: [{ pattern: /^[0-9]{7,16}$/, message: '请输入正确的电话号码' }],
         newPassword: [
           { required: true, message: 'password is required' },
@@ -182,13 +177,21 @@ export default {
   },
   mounted() {
     this.getData()
+    this.getApiData()
   },
   methods: {
     async getData() {
       this.listLoading = true
-      const resp = await getUsers(this.listQuery)
+      const resp = await getNavigations(this.listQuery)
       this.list = resp.data
+      console.log(this.list)
       this.total = Number(resp.headers['x-total-count'])
+      this.listLoading = false
+    },
+    async getApiData() {
+      this.listLoading = true
+      const resp = await getApiInfos(this.apiListQuery)
+      this.apiList = resp.data
       this.listLoading = false
     },
     handleFilter() {
@@ -197,34 +200,29 @@ export default {
     },
     handleCreate() {
       this.temp = {
-        id: undefined,
-        login: '',
-        mobile: '',
-        newPassword: '',
-        nickName: '',
-        authorities: [roleOptions[1].value]
+        title: '',
+        path: '',
+        icon: ''
       }
       this.dialogStatus = 'create'
-
       this.dialogVisible = true
-      this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate()
-      })
     },
     handleUpdate(row) {
       this.dialogStatus = 'update'
       this.temp = Object.assign({}, row)
       this.dialogVisible = true
-      this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate()
-      })
+      // this.$nextTick(() => {
+      //   this.$refs['dataForm'].clearValidate()
+      // })
     },
-    handlePassword(row) {
-      this.dialogStatus = 'password'
+    handleChildren(row) {
+      this.dialogStatus = 'children'
+      console.log(row)
       this.temp = {
-        login: row.login,
-        currentPassword: '',
-        newPassword: ''
+        parentId: row.id,
+        path: '',
+        icon: '',
+        title: ''
       }
       this.dialogVisible = true
       this.$nextTick(() => {
@@ -241,54 +239,45 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
-
-        await deleteUser(this.temp.login)
+        await deleteNavigation(this.temp.id)
         this.getData()
+        this.refreshLoadTree(this.$refs.table.store.states.lazyTreeNodeMap, this.maps, this.temp.parentId)
       } catch (err) {
         console.log(err)
       }
     },
-    createData() {
-      this.$refs['dataForm'].validate(async valid => {
-        if (valid) {
-          await createUser(this.temp)
-          this.getData()
-          this.dialogVisible = false
-        }
+    goNavigationApi(row) {
+      this.$router.push({
+        path: './navigationApi',
+        query: { navInfo: row }
       })
+    },
+    async createData() {
+      await createNavigation(this.temp)
+      this.getData()
+      this.dialogVisible = false
     },
     updateData() {
       this.$refs['dataForm'].validate(async valid => {
         if (valid) {
-          await updateUser(this.temp)
+          await updateNavigation(this.temp)
           this.getData()
+          this.refreshLoadTree(this.$refs.table.store.states.lazyTreeNodeMap, this.maps, this.temp.parentId)
           this.dialogVisible = false
         }
       })
     },
-    changePwd() {
-      this.$refs['dataForm'].validate(async valid => {
-        if (valid) {
-          const changePwdVM = {
-            currentPassword: this.temp.currentPassword,
-            newPassword: this.temp.newPassword
-          }
-
-          try {
-            await changePassword(this.temp.login, changePwdVM)
-            this.$notify({
-              title: '修改成功',
-              type: 'success'
-            })
-          } catch (err) {
-            this.$notify({
-              title: '修改失败',
-              type: 'warning'
-            })
-          }
-          this.dialogVisible = false
-        }
-      })
+    async addChildren() {
+      await createNavigation(this.temp)
+      this.getData()
+      this.refreshLoadTree(this.$refs.table.store.states.lazyTreeNodeMap, this.maps, this.temp.parentId)
+      this.dialogVisible = false
+    },
+    getChildren(listQuery) {
+      return getNavigations(listQuery)
+    },
+    updateApi() {
+      console.log('保存修改')
     }
   }
 }

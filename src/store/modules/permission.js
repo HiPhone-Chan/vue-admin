@@ -1,4 +1,6 @@
 import { asyncRoutes, constantRoutes } from '@/router'
+import Layout from '@/layout'
+import { getNavigationTrees } from '@/api/navigation'
 
 /**
  * Use meta.role to determine if the current user has permission
@@ -55,8 +57,52 @@ const actions = {
       } else {
         accessedRoutes = filterAsyncRoutes(asyncRoutes, roles)
       }
-      commit('SET_ROUTES', accessedRoutes)
-      resolve(accessedRoutes)
+      console.log(roles)
+      if (roles.includes('ROLE_STAFF')) {
+        getNavigationTrees().then(res => {
+          console.log(res)
+          const { data } = res
+          for (let i = 0; i < data.length; i++) {
+            accessedRoutes.push(
+              {
+                path: '/management',
+                component: Layout,
+                redirect: data[i].path,
+                children: [
+                  { component: () => import('@/views' + data[i].path),
+                    path: data[i].path,
+                    name: data[i].title,
+                    meta: { title: data[i].title, noCache: true, icon: data[i].icon, id: data[i].id },
+                    children: data[i].children
+                  }
+                ]
+              }
+            )
+          }
+          commit('SET_ROUTES', accessedRoutes)
+          resolve(accessedRoutes)
+        })
+        // getNavigations().then(async response => {
+        //   const { data } = response
+        //   for (let i = 0; i < data.length; i++) {
+        //     await getChildrenData(data[i])
+        //     accessedRoutes.push(
+        //       {
+        //         path: data[i].path,
+        //         component: () => import('@/views/error-page/401'),
+        //         name: data[i].title,
+        //         meta: { title: data[i].title, noCache: true, icon: data[i].icon },
+        //         children: data[i].children
+        //       }
+        //     )
+        //   }
+        //   commit('SET_ROUTES', accessedRoutes)
+        //   resolve(accessedRoutes)
+        // })
+      } else {
+        commit('SET_ROUTES', accessedRoutes)
+        resolve(accessedRoutes)
+      }
     })
   }
 }

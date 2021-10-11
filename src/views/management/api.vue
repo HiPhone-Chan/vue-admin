@@ -1,9 +1,6 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-select v-model="listQuery.authority" class="filter-item" :placeholder="$t('permission.role')" clearable @change="handleFilter">
-        <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value" />
-      </el-select>
       <el-input v-model="listQuery.title" :placeholder="$t('table.search')" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
       <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
       <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">{{ $t('table.add') }}</el-button>
@@ -18,35 +15,24 @@
       highlight-current-row
       style="width: 100%"
     >
-      <el-table-column align="center" :label="$t('table.id')" width="65">
+      <el-table-column align="center" label="方法" min-width="60">
         <template slot-scope="scope">
-          <span>{{ scope.row.id }}</span>
+          <span>{{ scope.row.method }}</span>
         </template>
       </el-table-column>
-      <el-table-column width="110px" align="center" :label="$t('login.username')">
+      <el-table-column min-width="60" align="center" label="路径">
         <template slot-scope="scope">
-          <span>{{ scope.row.login }}</span>
+          <span>{{ scope.row.path }}</span>
         </template>
       </el-table-column>
-      <el-table-column width="110px" align="center" :label="$t('user.nickname')">
+      <el-table-column min-width="60" align="center" label="描述">
         <template slot-scope="scope">
-          <span>{{ scope.row.nickName }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column width="110px" align="center" :label="$t('login.mobile')">
-        <template slot-scope="scope">
-          <span>{{ scope.row.mobile }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column width="150px" align="center" :label="$t('permission.role')">
-        <template slot-scope="scope">
-          <span>{{ scope.row.authorities | formatAuthorities }}</span>
+          <span>{{ scope.row.description }}</span>
         </template>
       </el-table-column>
       <el-table-column align="center" :label="$t('table.actions')" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">{{ $t('table.edit') }}</el-button>
-          <el-button type="warning" size="mini" @click="handlePassword(scope.row)">{{ $t('login.password') }}</el-button>
           <el-button type="danger" size="mini" @click="handleDelete(scope.row,'deleted')">{{ $t('table.delete') }}</el-button>
         </template>
       </el-table-column>
@@ -64,31 +50,24 @@
         </template>
 
         <template v-if="dialogStatus=='update'||dialogStatus=='create'">
-          <el-form-item :label="$t('login.username')" prop="login" label-width="90px">
-            <el-input v-model="temp.login" type="text" placeholder="登录名" :disabled="dialogStatus=='update'" />
-          </el-form-item>
-          <el-form-item :label="$t('permission.role')" prop="authorities" label-width="90px">
-            <el-select v-model="temp.authorities" :placeholder="$t('permission.role')" clearable multiple>
-              <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value" />
+          <el-form-item label="方法" label-width="90px" prop="method">
+            <el-select v-model="temp.method" placeholder="请选择">
+              <el-option label="GET" value="GET" />
+              <el-option label="POST" value="POST" />
+              <el-option label="PUT" value="PUT" />
+              <el-option label="DELETE" value="DELETE" />
             </el-select>
           </el-form-item>
-          <el-form-item :label="$t('user.nickname')" label-width="90px">
-            <el-input v-model="temp.nickName" type="text" placeholder="昵称" />
+          <el-form-item label="描述" label-width="90px">
+            <el-input v-model="temp.description" type="text" placeholder="description" />
           </el-form-item>
-          <el-form-item :label="$t('login.mobile')" prop="mobile" label-width="90px">
-            <el-input v-model="temp.mobile" type="text" placeholder="电话号码" />
+          <el-form-item label="路径" prop="mobile" label-width="90px">
+            <el-input v-model="temp.path" type="text" placeholder="path">
+              <template slot="prepend">/api/staff/</template>
+            </el-input>
           </el-form-item>
         </template>
 
-      </el-form>
-
-      <el-form v-else ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="70px" style="width: 400px; margin-left:50px;">
-        <el-form-item :label="$t('user.adminPassword')" label-width="110px">
-          <el-input v-model="temp.currentPassword" type="password" placeholder="当前管理员密码" />
-        </el-form-item>
-        <el-form-item :label="$t('login.password')" prop="newPassword" label-width="110px">
-          <el-input v-model="temp.newPassword" type="password" placeholder="需要改的密码" />
-        </el-form-item>
       </el-form>
 
       <div slot="footer" class="dialog-footer">
@@ -103,7 +82,8 @@
 
 <script>
 import Pagination from '@/components/Pagination'
-import { checkUserLogin, createUser, updateUser, getUsers, deleteUser, changePassword } from '@/api/user'
+import { checkUserLogin } from '@/api/user'
+import { createApiInfo, updateApiInfo, getApiInfos, deleteApiInfo } from '@/api/apiInfo'
 import { roleOptions, formatAuthorities, LOGIN_VALID_CHARACTER } from '@/utils/app-common'
 
 export default {
@@ -149,6 +129,8 @@ export default {
       dialogStatus: '',
       rules: {
         login: [{ required: true, trigger: 'blur', validator: validateLogin }],
+        method: [{ required: true, trigger: 'blur' }],
+
         authorities: [
           {
             required: true,
@@ -186,7 +168,7 @@ export default {
   methods: {
     async getData() {
       this.listLoading = true
-      const resp = await getUsers(this.listQuery)
+      const resp = await getApiInfos(this.listQuery)
       this.list = resp.data
       this.total = Number(resp.headers['x-total-count'])
       this.listLoading = false
@@ -198,11 +180,9 @@ export default {
     handleCreate() {
       this.temp = {
         id: undefined,
-        login: '',
-        mobile: '',
-        newPassword: '',
-        nickName: '',
-        authorities: [roleOptions[1].value]
+        method: '',
+        path: '',
+        description: ''
       }
       this.dialogStatus = 'create'
 
@@ -212,6 +192,7 @@ export default {
       })
     },
     handleUpdate(row) {
+      console.log(row)
       this.dialogStatus = 'update'
       this.temp = Object.assign({}, row)
       this.dialogVisible = true
@@ -242,7 +223,7 @@ export default {
           type: 'warning'
         })
 
-        await deleteUser(this.temp.login)
+        await deleteApiInfo(this.temp.id)
         this.getData()
       } catch (err) {
         console.log(err)
@@ -251,7 +232,8 @@ export default {
     createData() {
       this.$refs['dataForm'].validate(async valid => {
         if (valid) {
-          await createUser(this.temp)
+          this.temp.path = '/api/staff/' + this.temp.path
+          await createApiInfo(this.temp)
           this.getData()
           this.dialogVisible = false
         }
@@ -260,32 +242,8 @@ export default {
     updateData() {
       this.$refs['dataForm'].validate(async valid => {
         if (valid) {
-          await updateUser(this.temp)
+          await updateApiInfo(this.temp)
           this.getData()
-          this.dialogVisible = false
-        }
-      })
-    },
-    changePwd() {
-      this.$refs['dataForm'].validate(async valid => {
-        if (valid) {
-          const changePwdVM = {
-            currentPassword: this.temp.currentPassword,
-            newPassword: this.temp.newPassword
-          }
-
-          try {
-            await changePassword(this.temp.login, changePwdVM)
-            this.$notify({
-              title: '修改成功',
-              type: 'success'
-            })
-          } catch (err) {
-            this.$notify({
-              title: '修改失败',
-              type: 'warning'
-            })
-          }
           this.dialogVisible = false
         }
       })
