@@ -6,6 +6,9 @@ export const roleOptions = [
     value: 'ROLE_MANAGER',
     label: '管理员'
   }, {
+    value: 'ROLE_STAFF',
+    label: '员工'
+  }, {
     value: 'ROLE_USER',
     label: '普通用户'
   }
