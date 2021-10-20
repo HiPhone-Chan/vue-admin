@@ -43,7 +43,7 @@
       <div v-if="clickConfig" class="roleTree">
         <template>
           <el-button type="primary" size="mini" @click="handleSave">保存</el-button>
-          <el-button v-if="checkAll" type="primary" size="mini" @click="handleCheckAllChange">全选</el-button>
+          <el-button v-if="checkAll" type="primary" size="mini" @click="handleCheckAllChange">全选菜单</el-button>
           <el-button v-else type="primary" size="mini" @click="handleCheckAllChange">取消全选</el-button>
         </template>
         <el-tree
@@ -229,7 +229,6 @@ export default {
     async getRoleApis(temp) {
       this.roleApiList = []
       const roleApiResp = await getRoleApis(temp)
-      console.log(roleApiResp.data)
       roleApiResp.data.forEach(item => {
         this.hasCheck.push(item.id)
         this.roleApiList.push(item.id)
@@ -315,7 +314,6 @@ export default {
       })
     },
     handleNodeClick(data) {
-      console.log(data)
     },
     async loadNode(node, resolve) {
       this.menuListQuery.parentId = node.data.id
@@ -328,7 +326,6 @@ export default {
         apiResp.data.forEach(item => {
           this.roleApiListTmp.push(item.id)
         })
-        console.log('需要更改的接口数组' + this.roleApiListTmp)
         resp.data.push(...apiResp.data)
       }
       resolve(resp.data)
@@ -345,7 +342,6 @@ export default {
     handleSave() {
       const checkedApiList = []
       const checkList = this.$refs.roleTree.getCheckedNodes()
-      console.log(checkList)
       checkList.forEach(item => { // 遍历所有已选择节点 得到 已选择菜单和已选择接口
         if (item.title) {
           this.temp.navigationIds.push(item.id)
@@ -353,28 +349,22 @@ export default {
           checkedApiList.push(item.id)
         }
       })
-      console.log('原来的接口' + this.roleApiList)
-      console.log('所有已选择的接口数组' + checkedApiList)
       checkedApiList.forEach(item => { // 用已选择的接口数据与原始接口数据对比，若原始数组无该数据则push
         if (!this.roleApiList.includes(item)) {
           this.roleApiList.push(item)
         }
       })
-      console.log(this.roleApiList)
-      console.log(this.roleApiList.length)
       const needDeleteList = []
       this.roleApiList.forEach(item => { // 用原始接口数据与已选择的接口数据对比
         if (!checkedApiList.includes(item)) { // 若已选择的接口数据无该数据则说明可能需要删除
           if (this.roleApiListTmp.includes(item)) { // 用可能需要删除的数据与懒加载数据对比，若懒加载数据中存在，则说明用户操作过该菜单，需要删除
             needDeleteList.push(item)
-            console.log(this.roleApiList)
           }
         }
       })
       this.roleApiList = this.roleApiList.filter(item1 => { // 过滤掉需要删除的数据，得到新的原始数据
         return !needDeleteList.includes(item1)
       })
-      console.log(this.roleApiList)
       const roleApiTemp = {
         roleId: this.temp.roleId,
         apiIds: this.roleApiList

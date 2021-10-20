@@ -7,6 +7,7 @@
     </div>
 
     <el-table
+      ref="table"
       v-loading="listLoading"
       :data="list"
       element-loading-text="给我一点时间"
@@ -14,26 +15,32 @@
       fit
       highlight-current-row
       style="width: 100%"
+      row-key="id"
+      lazy
+      :load="loadChildren"
+      :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
     >
-      <el-table-column align="center" label="方法" min-width="60">
+      <el-table-column min-width="110px" align="left" label="名称">
         <template slot-scope="scope">
-          <span>{{ scope.row.method }}</span>
+          <span>{{ scope.row.title }}</span>
         </template>
       </el-table-column>
-      <el-table-column min-width="60" align="center" label="路径">
+      <el-table-column width="110px" align="center" label="图标">
+        <template slot-scope="scope">
+          <i :class="scope.row.icon" />
+        </template>
+      </el-table-column>
+      <el-table-column width="310px" align="center" label="地址">
         <template slot-scope="scope">
           <span>{{ scope.row.path }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column min-width="60" align="center" label="描述">
-        <template slot-scope="scope">
-          <span>{{ scope.row.description }}</span>
         </template>
       </el-table-column>
       <el-table-column align="center" :label="$t('table.actions')" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">{{ $t('table.edit') }}</el-button>
-          <el-button type="danger" size="mini" @click="handleDelete(scope.row,'deleted')">{{ $t('table.delete') }}</el-button>
+          <el-button type="warning" size="mini" @click="handleChildren(scope.row)">新增下级</el-button>
+          <el-button v-if="!scope.row.hasChildren" type="danger" size="mini" @click="handleDelete(scope.row,'deleted')">{{ $t('table.delete') }}</el-button>
+          <el-button type="primary" size="mini" @click="goNavigationApi(scope.row)">功能</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -41,40 +48,48 @@
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.size" @pagination="getData" />
 
     <el-dialog :visible.sync="dialogVisible">
-      <el-form v-if="dialogStatus!='password'" ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="70px" style="width: 400px; margin-left:50px;">
-        <!-- 编辑 -->
-        <template v-if="dialogStatus=='update'">
-          <el-form-item :label="$t('table.id')">
-            <el-input v-model="temp.id" type="text" placeholder="id" disabled />
-          </el-form-item>
-        </template>
+
+      <el-form v-if="dialogStatus!='children'&&dialogStatus!='api'" ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="70px" style="width: 400px; margin-left:50px;">
 
         <template v-if="dialogStatus=='update'||dialogStatus=='create'">
-          <el-form-item label="方法" label-width="90px" prop="method">
-            <el-select v-model="temp.method" placeholder="请选择">
-              <el-option label="GET" value="GET" />
-              <el-option label="POST" value="POST" />
-              <el-option label="PUT" value="PUT" />
-              <el-option label="DELETE" value="DELETE" />
-            </el-select>
+          <el-form-item label="名称" prop="title" label-width="90px">
+            <el-input v-model="temp.title" type="text" placeholder="title" />
           </el-form-item>
-          <el-form-item label="描述" label-width="90px">
-            <el-input v-model="temp.description" type="text" placeholder="描述" />
-          </el-form-item>
-          <el-form-item label="路径" prop="mobile" label-width="90px">
-            <el-input v-model="temp.path" type="text" placeholder="接口路径">
-              <template slot="prepend">/api/staff/</template>
+          <el-form-item label="图标" label-width="90px">
+            <el-input v-model="temp.icon" type="text" placeholder="icon">
+              <el-button slot="append" type="primary">
+                <a
+                  href="https://element.eleme.cn/#/zh-CN/component/icon"
+                  target="_blank"
+                >查看可选</a>
+              </el-button>
             </el-input>
+
+          </el-form-item>
+          <el-form-item label="地址" label-width="90px" prop="path">
+            <el-input v-model="temp.path" type="text" placeholder="path" />
           </el-form-item>
         </template>
 
+      </el-form>
+
+      <el-form v-else ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="70px" style="width: 400px; margin-left:50px;">
+        <el-form-item label="名称" label-width="110px" prop="title">
+          <el-input v-model="temp.title" placeholder="名称" />
+        </el-form-item>
+        <el-form-item label="图标" label-width="110px">
+          <el-input v-model="temp.icon" placeholder="图标" />
+        </el-form-item>
+        <el-form-item label="地址" label-width="110px">
+          <el-input v-model="temp.path" placeholder="地址" />
+        </el-form-item>
       </el-form>
 
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">{{ $t('table.cancel') }}</el-button>
         <el-button v-if="dialogStatus=='create'" type="primary" @click="createData">{{ $t('table.confirm') }}</el-button>
         <el-button v-if="dialogStatus=='update'" type="primary" @click="updateData">{{ $t('table.confirm') }}</el-button>
-        <el-button v-if="dialogStatus=='password'" type="primary" @click="changePwd">{{ $t('table.confirm') }}</el-button>
+        <el-button v-if="dialogStatus=='children'" type="primary" @click="addChildren">{{ $t('table.confirm') }}</el-button>
       </div>
     </el-dialog>
   </div>
@@ -83,14 +98,17 @@
 <script>
 import Pagination from '@/components/Pagination'
 import { checkUserLogin } from '@/api/user'
-import { createApiInfo, updateApiInfo, getApiInfos, deleteApiInfo } from '@/api/apiInfo'
+import { getNavigations, createNavigation, updateNavigation, deleteNavigation } from '@/api/navigation'
+import { getApiInfos } from '@/api/apiInfo'
 import { roleOptions, formatAuthorities, LOGIN_VALID_CHARACTER } from '@/utils/app-common'
+import { tableOpr } from './tree-opr'
 
 export default {
   components: { Pagination },
   filters: {
     formatAuthorities
   },
+  mixins: [tableOpr],
   data() {
     const validateLogin = async(rule, value, callback) => {
       if (this.dialogStatus === 'create') {
@@ -112,6 +130,7 @@ export default {
 
     return {
       list: [],
+      apiList: [],
       total: 0,
       listLoading: false,
       listQuery: {
@@ -129,14 +148,8 @@ export default {
       dialogStatus: '',
       rules: {
         login: [{ required: true, trigger: 'blur', validator: validateLogin }],
-        method: [{ required: true, trigger: 'blur' }],
-
-        authorities: [
-          {
-            required: true,
-            message: '请选择权限'
-          }
-        ],
+        title: [{ required: true, message: '名称不能为空', trigger: 'blur' }],
+        path: [{ required: true, message: '路径不能为空', trigger: 'blur' }],
         mobile: [{ pattern: /^[0-9]{7,16}$/, message: '请输入正确的电话号码' }],
         newPassword: [
           { required: true, message: 'password is required' },
@@ -164,13 +177,20 @@ export default {
   },
   mounted() {
     this.getData()
+    this.getApiData()
   },
   methods: {
     async getData() {
       this.listLoading = true
-      const resp = await getApiInfos(this.listQuery)
+      const resp = await getNavigations(this.listQuery)
       this.list = resp.data
       this.total = Number(resp.headers['x-total-count'])
+      this.listLoading = false
+    },
+    async getApiData() {
+      this.listLoading = true
+      const resp = await getApiInfos(this.apiListQuery)
+      this.apiList = resp.data
       this.listLoading = false
     },
     handleFilter() {
@@ -179,32 +199,29 @@ export default {
     },
     handleCreate() {
       this.temp = {
-        id: undefined,
-        method: '',
+        title: '',
         path: '',
-        description: ''
+        icon: ''
       }
       this.dialogStatus = 'create'
-
       this.dialogVisible = true
-      this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate()
-      })
     },
     handleUpdate(row) {
       this.dialogStatus = 'update'
       this.temp = Object.assign({}, row)
       this.dialogVisible = true
-      this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate()
-      })
+      // this.$nextTick(() => {
+      //   this.$refs['dataForm'].clearValidate()
+      // })
     },
-    handlePassword(row) {
-      this.dialogStatus = 'password'
+    handleChildren(row) {
+      this.dialogStatus = 'children'
       this.temp = {
-        login: row.login,
-        currentPassword: '',
-        newPassword: ''
+        parentId: row.id,
+        id: row.parentId,
+        path: '',
+        icon: '',
+        title: ''
       }
       this.dialogVisible = true
       this.$nextTick(() => {
@@ -221,31 +238,49 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
-
-        await deleteApiInfo(this.temp.id)
+        await deleteNavigation(this.temp.id)
         this.getData()
+        this.refreshLoadTree(this.$refs.table.store.states.lazyTreeNodeMap, this.maps, this.temp.parentId)
       } catch (err) {
-        console.log(err)
+        // console.log(err)
+        this.$notify({
+          title: '当前菜单有子级，无法删除！',
+          type: 'warning'
+        })
       }
     },
-    createData() {
-      this.$refs['dataForm'].validate(async valid => {
-        if (valid) {
-          this.temp.path = '/api/staff/' + this.temp.path
-          await createApiInfo(this.temp)
-          this.getData()
-          this.dialogVisible = false
-        }
+    goNavigationApi(row) {
+      this.$router.push({
+        path: './navigationApi',
+        query: { navInfo: row }
       })
+    },
+    async createData() {
+      await createNavigation(this.temp)
+      this.getData()
+      this.dialogVisible = false
     },
     updateData() {
       this.$refs['dataForm'].validate(async valid => {
         if (valid) {
-          await updateApiInfo(this.temp)
+          await updateNavigation(this.temp)
           this.getData()
+          this.refreshLoadTree(this.$refs.table.store.states.lazyTreeNodeMap, this.maps, this.temp.parentId)
           this.dialogVisible = false
         }
       })
+    },
+    async addChildren() {
+      await createNavigation(this.temp)
+      this.refreshLoadTree(this.$refs.table.store.states.lazyTreeNodeMap, this.maps, this.temp.id)
+      this.getData()
+      this.dialogVisible = false
+    },
+    getChildren(listQuery) {
+      return getNavigations(listQuery)
+    },
+    updateApi() {
+
     }
   }
 }

@@ -15,24 +15,24 @@
       highlight-current-row
       style="width: 100%"
     >
-      <el-table-column align="center" label="方法" min-width="60">
+      <el-table-column align="center" label="账号" min-width="60">
         <template slot-scope="scope">
-          <span>{{ scope.row.method }}</span>
+          <span>{{ scope.row.login }}</span>
         </template>
       </el-table-column>
-      <el-table-column min-width="60" align="center" label="路径">
+      <el-table-column min-width="60" align="center" label="昵称">
         <template slot-scope="scope">
-          <span>{{ scope.row.path }}</span>
+          <span>{{ scope.row.nickName }}</span>
         </template>
       </el-table-column>
-      <el-table-column min-width="60" align="center" label="描述">
+      <el-table-column min-width="60" align="center" label="电话">
         <template slot-scope="scope">
-          <span>{{ scope.row.description }}</span>
+          <span>{{ scope.row.mobile }}</span>
         </template>
       </el-table-column>
       <el-table-column align="center" :label="$t('table.actions')" class-name="small-padding fixed-width">
         <template slot-scope="scope">
-          <el-button type="danger" size="mini" @click="handleDelete(scope.row,'deleted')">{{ $t('table.delete') }}</el-button>
+          <el-button type="danger" size="mini" @click="handleDelete(scope.row,'deleted')">移出部门</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -44,40 +44,40 @@
       <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
       <el-table
         v-loading="listLoading"
-        :data="apiList"
+        :data="userList"
         element-loading-text="给我一点时间"
         border
         fit
         highlight-current-row
         style="width: 100%"
       >
-        <el-table-column align="center" label="方法" min-width="60">
+        <el-table-column align="center" label="账号" min-width="60">
           <template slot-scope="scope">
-            <span>{{ scope.row.method }}</span>
+            <span>{{ scope.row.login }}</span>
           </template>
         </el-table-column>
-        <el-table-column min-width="60" align="center" label="路径">
+        <el-table-column min-width="60" align="center" label="昵称">
           <template slot-scope="scope">
-            <span>{{ scope.row.path }}</span>
+            <span>{{ scope.row.nickName }}</span>
           </template>
         </el-table-column>
-        <el-table-column min-width="60" align="center" label="描述">
+        <el-table-column min-width="60" align="center" label="电话">
           <template slot-scope="scope">
-            <span>{{ scope.row.description }}</span>
+            <span>{{ scope.row.mobile }}</span>
           </template>
         </el-table-column>
         <el-table-column align="center" :label="$t('table.actions')" class-name="small-padding fixed-width">
           <template slot-scope="scope">
-            <el-button type="primary" size="mini" @click="handleAddApi(scope.row)">添加</el-button>
+            <el-button type="primary" size="mini" @click="handleAddUser(scope.row)">添加</el-button>
           </template>
         </el-table-column>
       </el-table>
       <pagination
         v-show="apiTotal>0"
         :total="apiTotal"
-        :page.sync="apiListQuery.page"
-        :limit.sync="apiListQuery.size"
-        @pagination="getApiData"
+        :page.sync="userListQuery.page"
+        :limit.sync="userListQuery.size"
+        @pagination="getUserData"
       />
     </el-dialog>
   </div>
@@ -85,8 +85,8 @@
 
 <script>
 import Pagination from '@/components/Pagination'
-import { getNavigationApis, createNavigationApi, deleteNavigationApi } from '@/api/navigationApi'
-import { getApiInfos } from '@/api/apiInfo'
+import { getOrganizationUsers, saveOrganizationUser, deleteOrganizationUser } from '@/api/organizationUser'
+import { getStaffs } from '@/api/staff'
 import { roleOptions, formatAuthorities } from '@/utils/app-common'
 
 export default {
@@ -96,9 +96,9 @@ export default {
   },
   data() {
     return {
-      navId: '',
+      organizationId: '',
       list: [],
-      apiList: [],
+      userList: [],
       total: 0,
       apiTotal: 0,
       listLoading: false,
@@ -108,7 +108,7 @@ export default {
         size: 10,
         authority: null
       },
-      apiListQuery: {
+      userListQuery: {
         page: 0,
         size: 100,
         authority: null
@@ -130,13 +130,11 @@ export default {
         })
       }
     },
-    navId: {
+    organizationId: {
       deep: true,
       handler: function(val, oldVal) {
         this.$router.push({
-          query: {
-            navId: this.navId
-          }
+          query: this.listQuery
         })
       }
     }
@@ -146,59 +144,57 @@ export default {
     if (query) {
       this.listQuery.page = query.page ? Number(query.page) : this.listQuery.page
       this.listQuery.size = query.size ? Number(query.size) : this.listQuery.size
-      this.navId = query.navId
+      this.organizationId = query.organizationId
     }
     if (query.navInfo) {
-      this.navId = query.navInfo.id
+      this.organizationId = query.navInfo.id
     }
   },
   mounted() {
     this.getData()
-    this.getApiData()
+    this.getUserData()
   },
   methods: {
     async getData() {
       this.listLoading = true
-      this.temp = {
-        navId: this.navId
-      }
-      const resp = await getNavigationApis(this.temp)
+      this.listQuery.organizationId = this.organizationId
+      const resp = await getOrganizationUsers(this.listQuery)
       this.list = resp.data
       this.total = Number(resp.headers['x-total-count'])
       this.listLoading = false
     },
-    async getApiData() {
+    async getUserData() {
       this.listLoading = true
-      const resp = await getApiInfos(this.apiListQuery)
-      const tempApiList = resp.data
-      this.apiTotal = Number(resp.headers['x-total-count'])
-      this.apiList = []
-      this.apiList = tempApiList.filter(apiItem => {
+      const resp = await getStaffs(this.userListQuery)
+      const tempUserList = resp.data
+      this.userTotal = Number(resp.headers['x-total-count'])
+      this.userList = []
+      this.userList = tempUserList.filter(userItem => {
         return this.list.every(item => {
-          return item.id !== apiItem.id
+          return item.id !== userItem.id
         })
       })
-      this.apiTotal = this.apiList.length
+      this.userTotal = this.userList.length
       this.listLoading = false
     },
     handleFilter() {
       this.listQuery.page = 0
-      this.apiListQuery.page = 0
+      this.userListQuery.page = 0
       this.getData()
-      this.getApiData()
+      this.getUserData()
     },
     handleCreate() {
       this.temp = {
-        navId: this.navId,
-        apiId: ''
+        login: '',
+        organizationId: ''
       }
       this.handleFilter()
       this.dialogVisible = true
     },
     async handleDelete(row) {
       this.temp = {
-        navId: this.navId,
-        apiId: row.id
+        organizationId: this.organizationId,
+        login: row.login
       }
 
       try {
@@ -207,17 +203,18 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
-        await deleteNavigationApi(this.temp)
+        await deleteOrganizationUser(this.temp)
         this.getData()
       } catch (err) {
         console.log(err)
       }
     },
-    async handleAddApi(row) {
-      this.temp.apiId = row.id
-      createNavigationApi(this.temp)
+    async handleAddUser(row) {
+      this.temp.organizationId = this.organizationId
+      this.temp.login = row.login
+      saveOrganizationUser(this.temp)
       await this.getData()
-      await this.getApiData()
+      await this.getUserData()
     }
   }
 }

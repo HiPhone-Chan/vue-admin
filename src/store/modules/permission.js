@@ -2,6 +2,41 @@ import { asyncRoutes, constantRoutes } from '@/router'
 import Layout from '@/layout'
 import { getNavigationTrees } from '@/api/navigation'
 
+function generateStaffRoutes(router, tree) {
+  router.path = tree.path
+  router.component = Layout
+  router.meta = {
+    title: tree.title,
+    icon: tree.icon,
+    id: tree.id
+  }
+
+  if (tree.children[0]) {
+    const children = []
+    for (const child of tree.children) {
+      const childRouter = {}
+      children.push(generateStaffRoutes(childRouter, child))
+      childRouter.component = resolve => require(['@/views' + child.path], resolve)
+    }
+    router.children = children
+  } else {
+    router.children = []
+    router.path = '/'
+    router.children.push(
+      {
+        path: tree.path,
+        component: resolve => require(['@/views' + tree.path], resolve),
+        meta: {
+          title: tree.title,
+          icon: tree.icon,
+          id: tree.id
+        }
+      }
+    )
+  }
+  return router
+}
+
 /**
  * Use meta.role to determine if the current user has permission
  * @param roles
@@ -57,48 +92,17 @@ const actions = {
       } else {
         accessedRoutes = filterAsyncRoutes(asyncRoutes, roles)
       }
-      console.log(roles)
       if (roles.includes('ROLE_STAFF')) {
         getNavigationTrees().then(res => {
-          console.log(res)
           const { data } = res
-          for (let i = 0; i < data.length; i++) {
-            accessedRoutes.push(
-              {
-                path: '/management',
-                component: Layout,
-                redirect: data[i].path,
-                children: [
-                  { component: () => import('@/views' + data[i].path),
-                    path: data[i].path,
-                    name: data[i].title,
-                    meta: { title: data[i].title, noCache: true, icon: data[i].icon, id: data[i].id },
-                    children: data[i].children
-                  }
-                ]
-              }
-            )
+          for (const item of data) {
+            const router = {}
+            generateStaffRoutes(router, item)
+            accessedRoutes.push(router)
           }
           commit('SET_ROUTES', accessedRoutes)
           resolve(accessedRoutes)
         })
-        // getNavigations().then(async response => {
-        //   const { data } = response
-        //   for (let i = 0; i < data.length; i++) {
-        //     await getChildrenData(data[i])
-        //     accessedRoutes.push(
-        //       {
-        //         path: data[i].path,
-        //         component: () => import('@/views/error-page/401'),
-        //         name: data[i].title,
-        //         meta: { title: data[i].title, noCache: true, icon: data[i].icon },
-        //         children: data[i].children
-        //       }
-        //     )
-        //   }
-        //   commit('SET_ROUTES', accessedRoutes)
-        //   resolve(accessedRoutes)
-        // })
       } else {
         commit('SET_ROUTES', accessedRoutes)
         resolve(accessedRoutes)

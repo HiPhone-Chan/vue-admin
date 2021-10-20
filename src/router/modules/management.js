@@ -34,7 +34,7 @@ const managementRouter = {
     },
     {
       path: 'menu',
-      component: () => import('@/views/management/menu'),
+      component: () => import('@/views/management/navigation'),
       name: 'menu',
       meta: {
         title: '菜单管理',
@@ -90,6 +90,27 @@ const managementRouter = {
       meta: {
         title: '菜单Api管理',
         icon: 'el-icon-menu',
+        noCache: true
+      }
+    },
+    {
+      path: 'organizationUser',
+      component: () => import('@/views/management/organizationUser'),
+      name: 'organizationUser',
+      hidden: true,
+      meta: {
+        title: '组织人员管理',
+        icon: 'el-icon-s-check',
+        noCache: true
+      }
+    },
+    {
+      path: 'addressBook',
+      component: () => import('@/views/management/addressBook'),
+      name: 'addressBook',
+      meta: {
+        title: '通讯录',
+        icon: 'el-icon-phone',
         noCache: true
       }
     }

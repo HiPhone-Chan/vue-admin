@@ -366,7 +366,6 @@ export default {
       })
     },
     loadNode() {
-      console.log(123)
     }
   }
 }
