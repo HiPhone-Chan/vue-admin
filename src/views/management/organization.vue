@@ -29,6 +29,7 @@
         <template slot-scope="scope">
           <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">{{ $t('table.edit') }}</el-button>
           <el-button type="warning" size="mini" @click="handleChildren(scope.row)">新增下级</el-button>
+          <el-button type="primary" size="mini" @click="goOrgStaff(scope.row)">人员</el-button>
           <el-button type="danger" size="mini" @click="handleDelete(scope.row,'deleted')">{{ $t('table.delete') }}</el-button>
         </template>
       </el-table-column>
@@ -156,9 +157,6 @@ export default {
       this.listLoading = true
       const resp = await getOrganizations(this.listQuery)
       this.list = resp.data
-      this.list.forEach(item => {
-        item.hasChildren = true
-      })
       this.total = Number(resp.headers['x-total-count'])
       this.listLoading = false
     },
@@ -185,13 +183,12 @@ export default {
     },
     handleChildren(row) {
       this.dialogStatus = 'children'
+      console.log(row)
       this.temp = {
         parentId: row.id,
         id: row.parentId,
         parentName: row.name,
-        name: '',
-        code: '',
-        type: ''
+        name: ''
       }
       this.dialogVisible = true
       this.$nextTick(() => {
@@ -214,6 +211,10 @@ export default {
         this.refreshLoadTree(this.$refs.table.store.states.lazyTreeNodeMap, this.maps, this.temp.parentId)
       } catch (err) {
         console.log(err)
+        this.$notify({
+          title: '当前组织有子级，无法删除！',
+          type: 'warning'
+        })
       }
     },
     async createData() {
@@ -233,12 +234,18 @@ export default {
     },
     async addChildren() {
       await createOrganization(this.temp)
+      this.refreshLoadTree(this.$refs.table.store.states.lazyTreeNodeMap, this.maps, this.temp.id)
       this.getData()
-      this.refreshLoadTree(this.$refs.table.store.states.lazyTreeNodeMap, this.maps, this.temp.parentId)
       this.dialogVisible = false
     },
     getChildren(listQuery) {
       return getOrganizations(listQuery)
+    },
+    goOrgStaff(row) {
+      this.$router.push({
+        path: './organizationUser',
+        query: { navInfo: row }
+      })
     }
   }
 }
