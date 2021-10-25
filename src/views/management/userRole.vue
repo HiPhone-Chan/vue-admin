@@ -2,7 +2,7 @@
   <div class="app-container" style="display:flex">
     <div class="container-left">
       <div class="filter-container">
-        <el-input v-model="listQuery.title" :placeholder="$t('table.search')" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+        <el-input v-model="listQuery.search" :placeholder="$t('table.search')" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
         <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
         <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">{{ $t('table.add') }}</el-button>
       </div>
@@ -140,12 +140,11 @@ export default {
       listQuery: {
         page: 0,
         size: 10,
-        authority: null
+        search: null
       },
       roleListQuery: {
         page: 0,
-        size: 500,
-        authority: null
+        size: 500
       },
       userRoleQuery: {
         page: 0,

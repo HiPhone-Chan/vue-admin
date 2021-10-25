@@ -139,13 +139,11 @@ export default {
       clickConfig: false,
       listQuery: {
         page: 0,
-        size: 10,
-        authority: null
+        size: 10
       },
       menuListQuery: {
         page: 0,
-        size: 500,
-        authority: null
+        size: 500
       },
       roleOptions,
       temp: {
