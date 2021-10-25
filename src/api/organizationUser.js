@@ -1,7 +1,7 @@
 import request from '@/utils/request'
 
 export function getOrganizationUsers(query) {
-  return request.get('/api/manager/organization-users', { params: query })
+  return request.get('/api/organization-users', { params: query })
 }
 
 export function saveOrganizationUser(query) {
@@ -9,6 +9,6 @@ export function saveOrganizationUser(query) {
 }
 
 export function deleteOrganizationUser(query) {
-  return request.delete('/api/manager/organization-user', { params: query })
+  return request.delete('/api/organization-user', { params: query })
 }
 
