@@ -1,7 +1,7 @@
 import request from '@/utils/request'
 
 export function getOrganizations(query) {
-  return request.get('/api/manager/organizations', { params: query })
+  return request.get('/api/organizations', { params: query })
 }
 
 export function createOrganization(organizationVM) {
