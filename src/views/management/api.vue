@@ -1,7 +1,10 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input v-model="listQuery.title" :placeholder="$t('table.search')" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-select v-model="listQuery.method" class="filter-item" placeholder="方法" @change="handleFilter">
+        <el-option v-for="item in methodOptions" :key="item.value" :label="item.label" :value="item.value" />
+      </el-select>
+      <el-input v-model="listQuery.search" :placeholder="$t('table.search')" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
       <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
       <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">{{ $t('table.add') }}</el-button>
     </div>
@@ -52,10 +55,7 @@
         <template v-if="dialogStatus=='update'||dialogStatus=='create'">
           <el-form-item label="方法" label-width="90px" prop="method">
             <el-select v-model="temp.method" placeholder="请选择">
-              <el-option label="GET" value="GET" />
-              <el-option label="POST" value="POST" />
-              <el-option label="PUT" value="PUT" />
-              <el-option label="DELETE" value="DELETE" />
+              <el-option v-for="item in methodOptions" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
           </el-form-item>
           <el-form-item label="描述" label-width="90px">
@@ -84,7 +84,7 @@
 import Pagination from '@/components/Pagination'
 import { checkUserLogin } from '@/api/user'
 import { createApiInfo, updateApiInfo, getApiInfos, deleteApiInfo } from '@/api/apiInfo'
-import { roleOptions, formatAuthorities, LOGIN_VALID_CHARACTER } from '@/utils/app-common'
+import { formatAuthorities, LOGIN_VALID_CHARACTER } from '@/utils/app-common'
 
 export default {
   components: { Pagination },
@@ -116,10 +116,14 @@ export default {
       listLoading: false,
       listQuery: {
         page: 0,
-        size: 10,
-        authority: null
+        size: 10
       },
-      roleOptions,
+      methodOptions: [
+        { value: 'get', label: 'GET' },
+        { value: 'post', label: 'POST' },
+        { value: 'delete', label: 'DELETE' },
+        { value: 'put', label: 'PUT' }
+      ],
       temp: {
         id: undefined,
         login: '',
@@ -130,13 +134,6 @@ export default {
       rules: {
         login: [{ required: true, trigger: 'blur', validator: validateLogin }],
         method: [{ required: true, trigger: 'blur' }],
-
-        authorities: [
-          {
-            required: true,
-            message: '请选择权限'
-          }
-        ],
         mobile: [{ pattern: /^[0-9]{7,16}$/, message: '请输入正确的电话号码' }],
         newPassword: [
           { required: true, message: 'password is required' },
@@ -194,18 +191,6 @@ export default {
     handleUpdate(row) {
       this.dialogStatus = 'update'
       this.temp = Object.assign({}, row)
-      this.dialogVisible = true
-      this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate()
-      })
-    },
-    handlePassword(row) {
-      this.dialogStatus = 'password'
-      this.temp = {
-        login: row.login,
-        currentPassword: '',
-        newPassword: ''
-      }
       this.dialogVisible = true
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()

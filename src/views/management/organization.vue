@@ -47,7 +47,7 @@
         </template>
 
         <template v-if="dialogStatus=='update'||dialogStatus=='create'">
-          <el-form-item label="组织名称" prop="login" label-width="90px">
+          <el-form-item label="组织名称" prop="name" label-width="90px">
             <el-input v-model="temp.name" type="text" placeholder="请输入名称" />
           </el-form-item>
         </template>
@@ -75,60 +75,28 @@
 
 <script>
 import Pagination from '@/components/Pagination'
-import { checkUserLogin } from '@/api/user'
 import { getOrganizations, createOrganization, updateOrganization, deleteOrganization } from '@/api/organization'
-import { roleOptions, formatAuthorities, LOGIN_VALID_CHARACTER } from '@/utils/app-common'
 import { tableOpr } from './tree-opr'
 
 export default {
   components: { Pagination },
-  filters: {
-    formatAuthorities
-  },
   mixins: [tableOpr],
   data() {
-    const validateLogin = async(rule, value, callback) => {
-      if (this.dialogStatus === 'create') {
-        if (value) {
-          if (LOGIN_VALID_CHARACTER.pattern.test(value)) {
-            const resp = await checkUserLogin(value)
-            const data = resp.data
-            if (data) {
-              callback(new Error('Login exists'))
-            }
-          } else {
-            callback(new Error(LOGIN_VALID_CHARACTER.message))
-          }
-        } else {
-          callback(new Error('Please enter login'))
-        }
-      }
-    }
-
     return {
       list: [],
       total: 0,
       listLoading: false,
       listQuery: {
         page: 0,
-        size: 10,
-        authority: null
+        size: 10
       },
-      roleOptions,
       temp: {
-        id: undefined,
-        login: '',
-        mobile: ''
+        id: undefined
       },
       dialogVisible: false,
       dialogStatus: '',
       rules: {
-        login: [{ required: true, trigger: 'blur', validator: validateLogin }],
-        mobile: [{ pattern: /^[0-9]{7,16}$/, message: '请输入正确的电话号码' }],
-        newPassword: [
-          { required: true, message: 'password is required' },
-          LOGIN_VALID_CHARACTER
-        ]
+        name: [{ required: true, trigger: 'blur' }]
       }
     }
   },
@@ -205,7 +173,6 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
-
         await deleteOrganization(this.temp.id)
         this.getData()
         this.refreshLoadTree(this.$refs.table.store.states.lazyTreeNodeMap, this.maps, this.temp.parentId)

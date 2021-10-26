@@ -87,13 +87,9 @@
 import Pagination from '@/components/Pagination'
 import { getNavigationApis, createNavigationApi, deleteNavigationApi } from '@/api/navigationApi'
 import { getApiInfos } from '@/api/apiInfo'
-import { roleOptions, formatAuthorities } from '@/utils/app-common'
 
 export default {
   components: { Pagination },
-  filters: {
-    formatAuthorities
-  },
   data() {
     return {
       navId: '',
@@ -105,19 +101,14 @@ export default {
       dialogVisible: false,
       listQuery: {
         page: 0,
-        size: 10,
-        authority: null
+        size: 10
       },
       apiListQuery: {
         page: 0,
-        size: 100,
-        authority: null
+        size: 100
       },
-      roleOptions,
       temp: {
-        id: undefined,
-        login: '',
-        mobile: ''
+        id: undefined
       }
     }
   },

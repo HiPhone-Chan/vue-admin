@@ -2,8 +2,6 @@
   <div class="app-container" style="display:flex">
     <div class="container-left">
       <div class="filter-container">
-        <el-input v-model="listQuery.title" :placeholder="$t('table.search')" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
-        <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
         <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">{{ $t('table.add') }}</el-button>
       </div>
 
@@ -100,13 +98,10 @@ import { getNavigations } from '@/api/navigation'
 import { getNavigationApis } from '@/api/navigationApi'
 import { getRoleNavigations, updateNavigationRole } from '@/api/navigationRole'
 import { getRoleApis, saveRoleApi } from '@/api/roleApi'
-import { roleOptions, formatAuthorities, LOGIN_VALID_CHARACTER } from '@/utils/app-common'
+import { LOGIN_VALID_CHARACTER } from '@/utils/app-common'
 
 export default {
   components: { Pagination },
-  filters: {
-    formatAuthorities
-  },
   data() {
     const validateLogin = async(rule, value, callback) => {
       if (this.dialogStatus === 'create') {
@@ -139,15 +134,12 @@ export default {
       clickConfig: false,
       listQuery: {
         page: 0,
-        size: 10,
-        authority: null
+        size: 10
       },
       menuListQuery: {
         page: 0,
-        size: 500,
-        authority: null
+        size: 500
       },
-      roleOptions,
       temp: {
         id: undefined
       },
@@ -238,10 +230,6 @@ export default {
           this.$refs.roleTree.setCheckedKeys(this.hasCheck)
         }
       })
-    },
-    handleFilter() {
-      this.listQuery.page = 0
-      this.getData()
     },
     handleCreate() {
       this.temp = {

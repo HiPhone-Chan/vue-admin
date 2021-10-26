@@ -18,7 +18,6 @@
         v-loading="listLoading"
         :data="list"
         element-loading-text="给我一点时间"
-        border
         fit
         highlight-current-row
         style="width: 100%"
@@ -38,6 +37,7 @@
             <span>{{ scope.row.mobile }}</span>
           </template>
         </el-table-column>
+        <el-table-column align="center" />
       </el-table>
     </el-card>
   </div>
@@ -56,13 +56,11 @@ export default {
       listLoading: false,
       listQuery: {
         page: 0,
-        size: 10,
-        authority: null
+        size: 10
       },
       organizationListQuery: {
         page: 0,
-        size: 500,
-        authority: null
+        size: 500
       },
       props: {
         label: 'name',
@@ -140,9 +138,18 @@ export default {
   }
 
   .box-card {
-    width: 320px;
-    height: 800px;
+    /* width: 320px;
+    height: 800px; */
+    width: 350px;
+    height: 95%;
     margin-right: 20px;
+    position: absolute;
+  }
+  .table-card{
+    width: 90%;
+    height: 95%;
+    left: 400px;
+    position: absolute;
   }
 
 </style>

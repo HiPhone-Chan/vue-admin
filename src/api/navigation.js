@@ -1,7 +1,11 @@
 import request from '@/utils/request'
+import qs from 'qs'
 
 export function getNavigations(query) {
-  return request.get('/api/manager/navigations', { params: query })
+  return request.get('/api/manager/navigations', { params: query, paramsSerializer: function(params) {
+    const result = qs.stringify(params, { arrayFormat: 'repeat' })
+    return result
+  } })
 }
 
 export function getNavigationTrees() {
