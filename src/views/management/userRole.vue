@@ -62,7 +62,7 @@
           </template>
           <el-tree
             ref="roleTree"
-            :props="props"
+            :props="roleTreeProps"
             :data="roleList"
             node-key="id"
             lazy
@@ -120,13 +120,9 @@ import Pagination from '@/components/Pagination'
 import { getUserRoles, updateUserRole } from '@/api/userRole'
 import { createStaff, updateStaff, deleteStaff, getStaffs, changePassword } from '@/api/staff'
 import { getRoles } from '@/api/staffRole'
-import { roleOptions, formatAuthorities, LOGIN_VALID_CHARACTER } from '@/utils/app-common'
 
 export default {
   components: { Pagination },
-  filters: {
-    formatAuthorities
-  },
   data() {
     return {
       list: [],
@@ -150,14 +146,13 @@ export default {
         size: 500,
         login: ''
       },
-      props: {
+      roleTreeProps: {
         label: 'name',
         children: 'name',
         isLeaf: function() {
           return true
         }
       },
-      roleOptions,
       temp: {
         id: undefined,
         login: '',
@@ -173,11 +168,7 @@ export default {
             message: '请选择权限'
           }
         ],
-        mobile: [{ pattern: /^[0-9]{7,16}$/, message: '请输入正确的电话号码' }],
-        newPassword: [
-          { required: true, message: 'password is required' },
-          LOGIN_VALID_CHARACTER
-        ]
+        mobile: [{ pattern: /^[0-9]{7,16}$/, message: '请输入正确的电话号码' }]
       }
     }
   },
@@ -361,8 +352,6 @@ export default {
         title: '修改成功',
         type: 'success'
       })
-    },
-    loadNode() {
     }
   }
 }

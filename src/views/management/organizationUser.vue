@@ -205,9 +205,9 @@ export default {
     async handleAddUser(row) {
       this.temp.organizationId = this.organizationId
       this.temp.login = row.login
-      saveOrganizationUser(this.temp)
+      await saveOrganizationUser(this.temp)
       await this.getData()
-      await this.getUserData()
+      this.getUserData() // getUserData需过滤getData所得数据，需同步进行
     }
   }
 }

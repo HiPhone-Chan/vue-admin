@@ -2,21 +2,21 @@
   <div class="app-container" style="display:flex">
     <el-card class="box-card">
       <el-tree
-        ref="roleTree"
-        :props="props"
-        :load="loadNode"
+        ref="organizationTree"
+        :props="orgTreeProps"
+        :load="loadTreeNode"
         :data="organizationList"
         node-key="id"
         :render-content="renderContent"
         lazy
-        @node-click="nodeClick"
+        @node-click="treeNodeClick"
       />
     </el-card>
 
     <el-card class="table-card">
       <el-table
         v-loading="listLoading"
-        :data="list"
+        :data="staffList"
         element-loading-text="给我一点时间"
         fit
         highlight-current-row
@@ -52,9 +52,9 @@ export default {
   data() {
     return {
       organizationList: [],
-      list: [],
+      staffList: [],
       listLoading: false,
-      listQuery: {
+      staffListQuery: {
         page: 0,
         size: 10
       },
@@ -62,7 +62,7 @@ export default {
         page: 0,
         size: 500
       },
-      props: {
+      orgTreeProps: {
         label: 'name',
         children: 'name'
       }
@@ -82,22 +82,22 @@ export default {
     },
     async getData() {
       this.listLoading = true
-      const resp = await getStaffs(this.listQuery)
-      this.list = resp.data
+      const resp = await getStaffs(this.staffListQuery)
+      this.staffList = resp.data
       this.total = Number(resp.headers['x-total-count'])
       this.listLoading = false
     },
-    async loadNode(node, resolve) {
+    async loadTreeNode(node, resolve) {
       this.organizationListQuery.parentId = node.data.id
       const resp = await getOrganizations(this.organizationListQuery)
       resolve(resp.data)
     },
-    async nodeClick(data) {
+    async treeNodeClick(data) {
       console.log(data)
       this.listLoading = true
-      this.listQuery.organizationId = data.id
-      const resp = await getOrganizationUsers(this.listQuery)
-      this.list = resp.data
+      this.staffListQuery.organizationId = data.id
+      const resp = await getOrganizationUsers(this.staffListQuery)
+      this.staffList = resp.data
       this.total = Number(resp.headers['x-total-count'])
       this.listLoading = false
     },

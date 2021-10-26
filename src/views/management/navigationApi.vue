@@ -206,9 +206,9 @@ export default {
     },
     async handleAddApi(row) {
       this.temp.apiId = row.id
-      createNavigationApi(this.temp)
+      await createNavigationApi(this.temp)
       await this.getData()
-      await this.getApiData()
+      await this.getApiData() // getApiData需要过滤getData所得数据，需同步进行
     }
   }
 }

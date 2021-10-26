@@ -1,17 +1,17 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-select v-model="listQuery.method" class="filter-item" placeholder="方法" @change="handleFilter">
+      <el-select v-model="apiListQuery.method" class="filter-item" placeholder="方法" @change="handleFilter">
         <el-option v-for="item in methodOptions" :key="item.value" :label="item.label" :value="item.value" />
       </el-select>
-      <el-input v-model="listQuery.search" :placeholder="$t('table.search')" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-input v-model="apiListQuery.search" :placeholder="$t('table.search')" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
       <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
       <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">{{ $t('table.add') }}</el-button>
     </div>
 
     <el-table
       v-loading="listLoading"
-      :data="list"
+      :data="apiList"
       element-loading-text="给我一点时间"
       border
       fit
@@ -41,7 +41,7 @@
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.size" @pagination="getData" />
+    <pagination v-show="total>0" :total="total" :page.sync="apiListQuery.page" :limit.sync="apiListQuery.size" @pagination="getData" />
 
     <el-dialog :visible.sync="dialogVisible">
       <el-form v-if="dialogStatus!='password'" ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="70px" style="width: 400px; margin-left:50px;">
@@ -61,7 +61,7 @@
           <el-form-item label="描述" label-width="90px">
             <el-input v-model="temp.description" type="text" placeholder="描述" />
           </el-form-item>
-          <el-form-item label="路径" prop="mobile" label-width="90px">
+          <el-form-item label="路径" prop="path" label-width="90px">
             <el-input v-model="temp.path" type="text" placeholder="接口路径">
               <template slot="prepend">/api/staff/</template>
             </el-input>
@@ -82,39 +82,16 @@
 
 <script>
 import Pagination from '@/components/Pagination'
-import { checkUserLogin } from '@/api/user'
 import { createApiInfo, updateApiInfo, getApiInfos, deleteApiInfo } from '@/api/apiInfo'
-import { formatAuthorities, LOGIN_VALID_CHARACTER } from '@/utils/app-common'
 
 export default {
   components: { Pagination },
-  filters: {
-    formatAuthorities
-  },
   data() {
-    const validateLogin = async(rule, value, callback) => {
-      if (this.dialogStatus === 'create') {
-        if (value) {
-          if (LOGIN_VALID_CHARACTER.pattern.test(value)) {
-            const resp = await checkUserLogin(value)
-            const data = resp.data
-            if (data) {
-              callback(new Error('Login exists'))
-            }
-          } else {
-            callback(new Error(LOGIN_VALID_CHARACTER.message))
-          }
-        } else {
-          callback(new Error('Please enter login'))
-        }
-      }
-    }
-
     return {
-      list: [],
+      apiList: [],
       total: 0,
       listLoading: false,
-      listQuery: {
+      apiListQuery: {
         page: 0,
         size: 10
       },
@@ -126,28 +103,22 @@ export default {
       ],
       temp: {
         id: undefined,
-        login: '',
         mobile: ''
       },
       dialogVisible: false,
       dialogStatus: '',
       rules: {
-        login: [{ required: true, trigger: 'blur', validator: validateLogin }],
         method: [{ required: true, trigger: 'blur' }],
-        mobile: [{ pattern: /^[0-9]{7,16}$/, message: '请输入正确的电话号码' }],
-        newPassword: [
-          { required: true, message: 'password is required' },
-          LOGIN_VALID_CHARACTER
-        ]
+        path: [{ required: true, message: '路径不能为空' }]
       }
     }
   },
   watch: {
-    listQuery: {
+    apiListQuery: {
       deep: true,
       handler: function(val, oldVal) {
         this.$router.push({
-          query: this.listQuery
+          query: this.apiListQuery
         })
       }
     }
@@ -155,8 +126,8 @@ export default {
   created() {
     const query = this.$route.query
     if (query) {
-      this.listQuery.page = query.page ? Number(query.page) : this.listQuery.page
-      this.listQuery.size = query.size ? Number(query.size) : this.listQuery.size
+      this.apiListQuery.page = query.page ? Number(query.page) : this.apiListQuery.page
+      this.apiListQuery.size = query.size ? Number(query.size) : this.apiListQuery.size
     }
   },
   mounted() {
@@ -165,13 +136,13 @@ export default {
   methods: {
     async getData() {
       this.listLoading = true
-      const resp = await getApiInfos(this.listQuery)
-      this.list = resp.data
+      const resp = await getApiInfos(this.apiListQuery)
+      this.apiList = resp.data
       this.total = Number(resp.headers['x-total-count'])
       this.listLoading = false
     },
     handleFilter() {
-      this.listQuery.page = 0
+      this.apiListQuery.page = 0
       this.getData()
     },
     handleCreate() {
@@ -191,6 +162,7 @@ export default {
     handleUpdate(row) {
       this.dialogStatus = 'update'
       this.temp = Object.assign({}, row)
+      this.temp.path = ''
       this.dialogVisible = true
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
@@ -224,6 +196,7 @@ export default {
       })
     },
     updateData() {
+      this.temp.path = '/api/staff/' + this.temp.path
       this.$refs['dataForm'].validate(async valid => {
         if (valid) {
           await updateApiInfo(this.temp)

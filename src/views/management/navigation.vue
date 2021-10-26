@@ -219,7 +219,7 @@ export default {
       } catch (err) {
         // console.log(err)
         this.$notify({
-          title: '当前菜单有子级，无法删除！',
+          title: '当前菜单有子级或被角色绑定，无法删除！',
           type: 'warning'
         })
       }
