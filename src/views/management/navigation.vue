@@ -30,6 +30,11 @@
           <i :class="scope.row.icon" />
         </template>
       </el-table-column>
+      <el-table-column width="110px" align="center" label="优先级">
+        <template slot-scope="scope">
+          <span>{{ scope.row.priority }}</span>
+        </template>
+      </el-table-column>
       <el-table-column width="310px" align="center" label="地址">
         <template slot-scope="scope">
           <span>{{ scope.row.path }}</span>
@@ -64,10 +69,12 @@
                 >查看可选</a>
               </el-button>
             </el-input>
-
           </el-form-item>
           <el-form-item label="地址" label-width="90px" prop="path">
             <el-input v-model="temp.path" type="text" placeholder="path" />
+          </el-form-item>
+          <el-form-item label="优先级" label-width="90px">
+            <el-input v-model="temp.priority" placeholder="优先级" />
           </el-form-item>
         </template>
 
@@ -97,37 +104,14 @@
 
 <script>
 import Pagination from '@/components/Pagination'
-import { checkUserLogin } from '@/api/user'
 import { getNavigations, createNavigation, updateNavigation, deleteNavigation } from '@/api/navigation'
 import { getApiInfos } from '@/api/apiInfo'
-import { roleOptions, formatAuthorities, LOGIN_VALID_CHARACTER } from '@/utils/app-common'
 import { tableOpr } from './tree-opr'
 
 export default {
   components: { Pagination },
-  filters: {
-    formatAuthorities
-  },
   mixins: [tableOpr],
   data() {
-    const validateLogin = async(rule, value, callback) => {
-      if (this.dialogStatus === 'create') {
-        if (value) {
-          if (LOGIN_VALID_CHARACTER.pattern.test(value)) {
-            const resp = await checkUserLogin(value)
-            const data = resp.data
-            if (data) {
-              callback(new Error('Login exists'))
-            }
-          } else {
-            callback(new Error(LOGIN_VALID_CHARACTER.message))
-          }
-        } else {
-          callback(new Error('Please enter login'))
-        }
-      }
-    }
-
     return {
       list: [],
       apiList: [],
@@ -136,25 +120,16 @@ export default {
       listQuery: {
         page: 0,
         size: 10,
-        authority: null
+        sort: ['priority,asc']
       },
-      roleOptions,
       temp: {
-        id: undefined,
-        login: '',
-        mobile: ''
+        id: undefined
       },
       dialogVisible: false,
       dialogStatus: '',
       rules: {
-        login: [{ required: true, trigger: 'blur', validator: validateLogin }],
         title: [{ required: true, message: '名称不能为空', trigger: 'blur' }],
-        path: [{ required: true, message: '路径不能为空', trigger: 'blur' }],
-        mobile: [{ pattern: /^[0-9]{7,16}$/, message: '请输入正确的电话号码' }],
-        newPassword: [
-          { required: true, message: 'password is required' },
-          LOGIN_VALID_CHARACTER
-        ]
+        path: [{ required: true, message: '路径不能为空', trigger: 'blur' }]
       }
     }
   },
@@ -210,9 +185,9 @@ export default {
       this.dialogStatus = 'update'
       this.temp = Object.assign({}, row)
       this.dialogVisible = true
-      // this.$nextTick(() => {
-      //   this.$refs['dataForm'].clearValidate()
-      // })
+      this.$nextTick(() => {
+        this.$refs['dataForm'].clearValidate()
+      })
     },
     handleChildren(row) {
       this.dialogStatus = 'children'
@@ -244,7 +219,7 @@ export default {
       } catch (err) {
         // console.log(err)
         this.$notify({
-          title: '当前菜单有子级，无法删除！',
+          title: '当前菜单有子级或被角色绑定，无法删除！',
           type: 'warning'
         })
       }
@@ -255,10 +230,14 @@ export default {
         query: { navInfo: row }
       })
     },
-    async createData() {
-      await createNavigation(this.temp)
-      this.getData()
-      this.dialogVisible = false
+    createData() {
+      this.$refs['dataForm'].validate(async valid => {
+        if (valid) {
+          await createNavigation(this.temp)
+          this.getData()
+          this.dialogVisible = false
+        }
+      })
     },
     updateData() {
       this.$refs['dataForm'].validate(async valid => {
@@ -278,9 +257,6 @@ export default {
     },
     getChildren(listQuery) {
       return getNavigations(listQuery)
-    },
-    updateApi() {
-
     }
   }
 }

@@ -87,13 +87,9 @@
 import Pagination from '@/components/Pagination'
 import { getOrganizationUsers, saveOrganizationUser, deleteOrganizationUser } from '@/api/organizationUser'
 import { getStaffs } from '@/api/staff'
-import { roleOptions, formatAuthorities } from '@/utils/app-common'
 
 export default {
   components: { Pagination },
-  filters: {
-    formatAuthorities
-  },
   data() {
     return {
       organizationId: '',
@@ -105,15 +101,12 @@ export default {
       dialogVisible: false,
       listQuery: {
         page: 0,
-        size: 10,
-        authority: null
+        size: 10
       },
       userListQuery: {
         page: 0,
-        size: 100,
-        authority: null
+        size: 100
       },
-      roleOptions,
       temp: {
         id: undefined,
         login: '',
@@ -212,9 +205,9 @@ export default {
     async handleAddUser(row) {
       this.temp.organizationId = this.organizationId
       this.temp.login = row.login
-      saveOrganizationUser(this.temp)
+      await saveOrganizationUser(this.temp)
       await this.getData()
-      await this.getUserData()
+      this.getUserData() // getUserData需过滤getData所得数据，需同步进行
     }
   }
 }
