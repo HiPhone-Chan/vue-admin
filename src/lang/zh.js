@@ -118,6 +118,7 @@ export default {
     type: '类型',
     remark: '点评',
     search: '搜索',
+    refresh: '刷新',
     add: '添加',
     export: '导出',
     reviewer: '审核人',

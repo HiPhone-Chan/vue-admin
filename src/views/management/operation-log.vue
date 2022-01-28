@@ -43,7 +43,6 @@
 
     <el-dialog :visible.sync="dialogVisible">
       <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="70px" style="width: 400px; margin-left:50px;">
-        <!-- 编辑 -->
         <template v-if="dialogStatus=='update'">
           <el-form-item :label="$t('table.id')">
             <el-input v-model="temp.id" type="text" placeholder="id" disabled />
